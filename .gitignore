@@ -17,6 +17,10 @@ examples/*/Debug/*
 examples/*/Release/*
 examples/*/x64/*
 
+# Generated makefiles
+Makefile
+*/Makefile
+
 ## Visual Studio artifacts
 .vs
 ipch
