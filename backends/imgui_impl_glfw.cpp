@@ -229,7 +229,7 @@ enum GlfwClientApi
 };
 
 #if GLFW_HAS_X11
-typedef Atom (*PFN_XInternAtom)(Display*, const char* ,Bool);
+typedef Atom (*PFN_XInternAtom)(Display*, const char* , int); // TinyEngine: Bool -> int (X11 macro conflict)
 typedef int  (*PFN_XChangeProperty)(Display*, Window, Atom, Atom, int, int, const unsigned char*, int);
 typedef int  (*PFN_XChangeWindowAttributes)(Display*, Window, unsigned long, XSetWindowAttributes*);
 typedef int  (*PFN_XFlush)(Display*);
@@ -1338,16 +1338,28 @@ static void ImGui_ImplGlfw_SetWindowFloating(ImGui_ImplGlfw_Data* bd, GLFWwindow
     {
         Display* display = glfwGetX11Display();
         Window xwindow = glfwGetX11Window(window);
-        Atom wm_type = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE", False);
-        Atom wm_type_dialog = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-        bd->XChangeProperty(display, xwindow, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+        Atom wm_type = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE", 0); // TinyEngine: False -> 0 (X11 macro conflict)
+        Atom wm_type_dialog = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE_DIALOG", 0); // TinyEngine: False -> 0 (X11 macro conflict)
+        bd->XChangeProperty(display, xwindow, wm_type, 4, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1); // TinyEngine: XA_ATOM -> 4
         XSetWindowAttributes attrs;
-        attrs.override_redirect = False;
+        attrs.override_redirect = 0; // TinyEngine: False -> 0 (X11 macro conflict)
         bd->XChangeWindowAttributes(display, xwindow, CWOverrideRedirect, &attrs);
         bd->XFlush(display);
     }
 #endif // GLFW_EXPOSE_NATIVE_X11
 #ifdef GLFW_EXPOSE_NATIVE_WAYLAND
+    if (glfwGetPlatform() == GLFW_PLATFORM_X11)
+    {
+        Display* display = glfwGetX11Display();
+        Window xwindow = glfwGetX11Window(window);
+        Atom wm_type = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE", 0); // TinyEngine: False -> 0 (X11 macro conflict)
+        Atom wm_type_dialog = bd->XInternAtom(display, "_NET_WM_WINDOW_TYPE_DIALOG", 0); // TinyEngine: False -> 0 (X11 macro conflict)
+        bd->XChangeProperty(display, xwindow, wm_type, 4, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1); // TinyEngine: XA_ATOM -> 4
+        XSetWindowAttributes attrs;
+        attrs.override_redirect = 0; // TinyEngine: False -> 0 (X11 macro conflict)
+        bd->XChangeWindowAttributes(display, xwindow, CWOverrideRedirect, &attrs);
+        bd->XFlush(display);
+    }
     // FIXME: Help needed, see #8884, #8474 for discussions about this.
 #endif // GLFW_EXPOSE_NATIVE_X11
 }
